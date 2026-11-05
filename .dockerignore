@@ -1,0 +1,10 @@
+**/bin/
+**/obj/
+.git/
+.github/
+evidence/
+tests/
+tools/
+client/
+**/__pycache__/
+*.md

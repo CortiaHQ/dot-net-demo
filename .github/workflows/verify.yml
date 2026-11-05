@@ -1,0 +1,50 @@
+name: Verify image
+
+# Builds the final image, records the runtime it contains, and runs the integration
+# checks against the running container. The evidence folder is uploaded as an artifact
+# so a reviewer can tie the runtime inventory and the checks to one image ID and one
+# commit. Runs on demand and on pull requests; nothing is scheduled.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image and record runtime inventory
+        run: python3 tools/evaluate.py build --label ci
+
+      - name: Run integration checks against the running image
+        run: python3 tools/evaluate.py check --label ci
+
+      - name: Summarize
+        if: always()
+        run: |
+          {
+            echo '## Image'
+            echo '```json'
+            cat evidence/ci/build.json
+            echo '```'
+            echo '## Checks'
+            echo '```'
+            cat evidence/ci/checks.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evidence-${{ github.sha }}
+          path: evidence/
+          if-no-files-found: warn
