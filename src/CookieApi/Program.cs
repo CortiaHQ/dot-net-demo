@@ -17,9 +17,23 @@ builder.Services
         options.Cookie.Name = "demo.auth";
         options.Cookie.HttpOnly = true;
         options.Cookie.SameSite = SameSiteMode.Lax;
-        // The fixture is served over plain HTTP on loopback; a real deployment sits behind TLS.
+        // Preserve the demo's loopback-only HTTP behavior while keeping the cookie usable
+        // during the sign-in flow under newer ASP.NET Core defaults.
         options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
         options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
+        options.Events = new CookieAuthenticationEvents
+        {
+            OnRedirectToLogin = context =>
+            {
+                context.Response.Redirect(context.RedirectUri);
+                return Task.CompletedTask;
+            },
+            OnRedirectToAccessDenied = context =>
+            {
+                context.Response.Redirect(context.RedirectUri);
+                return Task.CompletedTask;
+            }
+        };
     });
 
 builder.Services.AddAuthorization();
