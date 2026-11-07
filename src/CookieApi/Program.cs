@@ -20,6 +20,19 @@ builder.Services
         // The fixture is served over plain HTTP on loopback; a real deployment sits behind TLS.
         options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
         options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
+        options.Events = new CookieAuthenticationEvents
+        {
+            OnRedirectToLogin = context =>
+            {
+                context.Response.Redirect(context.RedirectUri);
+                return Task.CompletedTask;
+            },
+            OnRedirectToAccessDenied = context =>
+            {
+                context.Response.Redirect(context.RedirectUri);
+                return Task.CompletedTask;
+            },
+        };
     });
 
 builder.Services.AddAuthorization();
