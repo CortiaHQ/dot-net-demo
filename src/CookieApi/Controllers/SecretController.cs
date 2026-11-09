@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,7 +10,7 @@ namespace CookieApi.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/secret")]
-[Authorize]
+[Authorize(AuthenticationSchemes = CookieAuthenticationDefaults.AuthenticationScheme)]
 public sealed class SecretController : ControllerBase
 {
     private readonly IConfiguration _config;

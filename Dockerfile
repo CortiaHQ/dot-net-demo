@@ -6,8 +6,8 @@
 # runtime image, and THAT image's runtime is what ships. A green build on a patched SDK
 # says nothing about the runtime in the final image; see README.md "What ships".
 
-ARG SDK_IMAGE=mcr.microsoft.com/dotnet/sdk:8.0.427
-ARG RUNTIME_IMAGE=mcr.microsoft.com/dotnet/aspnet:8.0.32
+ARG SDK_IMAGE=mcr.microsoft.com/dotnet/sdk:10.0
+ARG RUNTIME_IMAGE=mcr.microsoft.com/dotnet/aspnet:10.0.14
 
 FROM ${SDK_IMAGE} AS build
 WORKDIR /src
