@@ -29,16 +29,28 @@ jobs:
 
       - name: Summarize
         if: always()
+        shell: bash
         run: |
+          summarize_file() {
+            local title="$1"
+            local language="$2"
+            local file="$3"
+            echo "## $title"
+            if [[ -f "$file" ]]; then
+              printf '```%s\n' "$language"
+              cat "$file"
+              printf '\n```\n'
+            else
+              printf 'Evidence unavailable: `%s` was not produced.\n' "$file"
+            fi
+            echo
+          }
+
           {
-            echo '## Image'
-            echo '```json'
-            cat evidence/ci/build.json
-            echo '```'
-            echo '## Checks'
-            echo '```'
-            cat evidence/ci/checks.txt
-            echo '```'
+            summarize_file "Image and build metadata" "json" "evidence/ci/build.json"
+            summarize_file "Runtime inventory inside the final image" "text" "evidence/ci/list-runtimes.txt"
+            summarize_file "Check metadata and image ID" "json" "evidence/ci/checks.json"
+            summarize_file "Checks" "text" "evidence/ci/checks.txt"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload evidence

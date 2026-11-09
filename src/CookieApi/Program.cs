@@ -20,6 +20,36 @@ builder.Services
         // The fixture is served over plain HTTP on loopback; a real deployment sits behind TLS.
         options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
         options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
+
+        // .NET 10 defaults to 401/403 for known API endpoints. Preserve the
+        // existing navigation redirects, including for the protected controller,
+        // while retaining the previous XMLHttpRequest behavior.
+        options.Events.OnRedirectToLogin = context =>
+        {
+            if (IsXmlHttpRequest(context.Request))
+            {
+                context.Response.Headers.Location = context.RedirectUri;
+                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            }
+            else
+            {
+                context.Response.Redirect(context.RedirectUri);
+            }
+            return Task.CompletedTask;
+        };
+        options.Events.OnRedirectToAccessDenied = context =>
+        {
+            if (IsXmlHttpRequest(context.Request))
+            {
+                context.Response.Headers.Location = context.RedirectUri;
+                context.Response.StatusCode = StatusCodes.Status403Forbidden;
+            }
+            else
+            {
+                context.Response.Redirect(context.RedirectUri);
+            }
+            return Task.CompletedTask;
+        };
     });
 
 builder.Services.AddAuthorization();
@@ -88,6 +118,10 @@ app.MapGet("/denied", () => Results.Text("<!doctype html><html><body><h1>Access 
 app.MapControllers();
 
 app.Run();
+
+static bool IsXmlHttpRequest(HttpRequest request) =>
+    string.Equals(request.Query["X-Requested-With"].ToString(), "XMLHttpRequest", StringComparison.Ordinal)
+    || string.Equals(request.Headers["X-Requested-With"].ToString(), "XMLHttpRequest", StringComparison.Ordinal);
 
 static string LoginPage(string? returnUrl, string? error)
 {
